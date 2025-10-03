@@ -1,0 +1,59 @@
+name: Vap Data Report
+
+on:
+  schedule:
+    - cron: '0 6 * * 1-5'  # Hafta içi her gün 06:00 UTC
+  workflow_dispatch:       # Manuel tetikleme imkanı
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Google Chrome and ChromeDriver
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Install dependencies
+        run: pip install selenium pandas openpyxl
+
+      - name: Run report script
+        run: python vap.py
+
+      - name: Upload report files as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vap-report
+          path: |
+            data/*.html
+            data/*.xls
+            data/*.xlsx
+
+      - name: Commit and push generated files
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Güvenli remote URL ayarı
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+
+          shopt -s nullglob
+          files=(data/*.xls data/*.xlsx data/*.html)
+
+          if [ ${#files[@]} -gt 0 ]; then
+            git add "${files[@]}"
+            git commit -m "📊 Add updated VAP report files" || echo "No changes to commit"
+            git push
+          else
+            echo "⚠️ No files to commit."
+          fi
