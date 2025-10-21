@@ -1,0 +1,50 @@
+name: Vap Daily Report
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # Her gün 06:00
+  workflow_dispatch:
+
+permissions:
+  contents: write # ✨ Gerekli izin
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium pandas openpyxl requests webdriver-manager xlrd
+
+      - name: Install Chromium & ChromeDriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-chromedriver
+
+      - name: Run VAP Selenium Script
+        run: |
+          mkdir -p data
+          python vap_selenium_download.py
+
+      - name: List generated files
+        run: ls -lh data/
+
+      - name: Commit and push results
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/*.xlsx data/*.html
+          git commit -m "📊 Daily VAP report: $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          git push
