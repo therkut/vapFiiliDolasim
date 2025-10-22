@@ -36,7 +36,7 @@ jobs:
       - name: Run VAP Selenium Script
         run: |
           mkdir -p data
-          python vap_selenium_download.py
+          python vap.py
 
       - name: List generated files
         run: ls -lh data/
