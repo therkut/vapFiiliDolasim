@@ -2,11 +2,11 @@ name: Vap Daily Report
 
 on:
   schedule:
-    - cron: '0 6 * * *' # Her gün 06:00
+    - cron: '0 6 * * *' # Her gün 06:00'da
   workflow_dispatch:
 
 permissions:
-  contents: write # ✨ Gerekli izin
+  contents: write
 
 jobs:
   build:
@@ -40,6 +40,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/*.xlsx data/*.html
+          git add data/*.xlsx data/*.html || true
           git commit -m "📊 Daily VAP report: $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
           git push
