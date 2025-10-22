@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 # === AYARLAR ===
 DOWNLOAD_DIR = os.path.join(os.getcwd(), "data")
@@ -30,12 +32,15 @@ def setup_driver(download_dir):
         "directory_upgrade": True,
         "safebrowsing.enabled": True
     })
-    options.add_argument("--headless")  
+    options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
-    return webdriver.Chrome(options=options)
+
+    # WebDriver Manager: Chrome sürümünü tespit edip uyumlu driver'ı indirir
+    service = Service(ChromeDriverManager().install())
+    return webdriver.Chrome(service=service, options=options)
 
 # === DOSYA İNDİRME BEKLEME ===
 def wait_for_download(download_dir, timeout=120):
@@ -54,20 +59,19 @@ def download_excel(date_str):
     driver = setup_driver(DOWNLOAD_DIR)
     try:
         driver.get(URL_FORM)
-        # Formun yüklenmesini bekle
         WebDriverWait(driver, 40).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "form.all-companies-form"))
         )
-        # Datepicker doldur
+
         date_input = WebDriverWait(driver, 30).until(
             EC.visibility_of_element_located((By.ID, "datepicker"))
         )
         date_input.clear()
         date_input.send_keys(date_str)
-        # Formu submit et
+
         submit_btn = driver.find_element(By.CSS_SELECTOR, "input.submit-btn")
         driver.execute_script("arguments[0].click();", submit_btn)
-        # Dosyanın inmesini bekle
+
         file_path = wait_for_download(DOWNLOAD_DIR, timeout=120)
         if file_path is None:
             raise Exception("Excel dosyası indirilemedi veya timeout oluştu.")
