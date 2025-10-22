@@ -28,11 +28,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install selenium pandas openpyxl requests webdriver-manager xlrd
 
-      - name: Install Chromium & ChromeDriver
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-browser chromium-chromedriver
-
       - name: Run VAP Selenium Script
         run: |
           mkdir -p data
