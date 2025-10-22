@@ -38,7 +38,6 @@ def setup_driver(download_dir):
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
 
-    # WebDriver Manager: Chrome sürümünü tespit edip uyumlu driver'ı indirir
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
